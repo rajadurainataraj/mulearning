@@ -1,0 +1,47 @@
+.container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+}
+.button {
+  /* width: 200px;
+  font-size: 3rem;
+  font-weight: bold; */
+  /* margin: 20px auto; */
+  /* height: "60px";
+  font-size: "22px";
+  text-transform: "none"; */
+  width: 200px !important;
+  margin: 20px auto !important;
+  height: 60px !important;
+  font-size: 22px !important;
+  text-transform: none !important;
+}
+.wrapper {
+  width: 90%;
+  text-align: center;
+}
+.signup {
+  margin: "20px auto";
+  height: "60px";
+  font-size: "22px";
+  text-transform: "none";
+}
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+.error_message {
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  color: "red" !important;
+}
+/* .input_error {
+  border: 1px solid red;
+}
+.input_error :focus {
+  border: 1px solid red;
+} */

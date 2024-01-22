@@ -1,0 +1,10 @@
+.flex_col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+/* .MuiButtonBase-root:disabled {
+  cursor: not-allowed;
+  pointer-events: auto;
+} */
