@@ -7,6 +7,7 @@ import DrawerAppBar from "./components/DrawerAppBar";
 import Table from "./components/Table";
 import FullFeaturedCrudGrid from "./components/FullFeaturedCrudGrid";
 import ColumnSelection from "./components/ColumnSelection";
+import Task from "./components/Task";
 
 const App = () => {
   const isDark = useRecoilValue(darkModeState);

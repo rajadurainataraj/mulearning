@@ -17,6 +17,8 @@ import {
   TextField,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 const useFakeMutation = () => {
   return React.useCallback(
@@ -42,6 +44,7 @@ const initialRows = [
     dateCreated: randomCreatedDate(),
     lastLogin: randomUpdatedDate(),
     experience: 1,
+    isEditMode: false, // Added flag for edit mode
   },
   {
     id: 2,
@@ -50,6 +53,7 @@ const initialRows = [
     dateCreated: randomCreatedDate(),
     lastLogin: randomUpdatedDate(),
     experience: 2,
+    isEditMode: false, // Added flag for edit mode
   },
   {
     id: 3,
@@ -58,6 +62,7 @@ const initialRows = [
     dateCreated: randomCreatedDate(),
     lastLogin: randomUpdatedDate(),
     experience: 3,
+    isEditMode: false, // Added flag for edit mode
   },
   {
     id: 4,
@@ -66,6 +71,7 @@ const initialRows = [
     dateCreated: randomCreatedDate(),
     lastLogin: randomUpdatedDate(),
     experience: 4,
+    isEditMode: false, // Added flag for edit mode
   },
   {
     id: 5,
@@ -74,6 +80,7 @@ const initialRows = [
     dateCreated: randomCreatedDate(),
     lastLogin: randomUpdatedDate(),
     experience: 5,
+    isEditMode: false, // Added flag for edit mode
   },
 ];
 
@@ -85,17 +92,23 @@ export default function CombinedGrid() {
   const [selectedUser, setSelectedUser] = React.useState(null);
   const [newExperience, setNewExperience] = React.useState("");
   const [rows, setRows] = React.useState(initialRows);
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false); // Track dialog open state
 
   const handleCloseSnackbar = () => setSnackbar(null);
   const handleCloseExperienceDialog = () => {
     setOpenExperienceDialog(false);
+    setIsDialogOpen(false); // Close dialog and reset state
     setSelectedUser(null);
     setNewExperience("");
   };
   const handleOpenExperienceDialog = (user) => {
-    setOpenExperienceDialog(true);
-    setSelectedUser(user);
-    setNewExperience("");
+    if (!isDialogOpen) {
+      // Check if dialog is already open
+      setOpenExperienceDialog(true);
+      setSelectedUser(user);
+      setNewExperience("");
+      setIsDialogOpen(true); // Set dialog open state
+    }
   };
 
   const processRowUpdate = React.useCallback(
@@ -127,6 +140,25 @@ export default function CombinedGrid() {
     handleCloseExperienceDialog();
   };
 
+  const handleEditRow = (id) => {
+    if (!isDialogOpen) {
+      // Check if dialog is already open
+      const updatedRows = rows.map((row) =>
+        row.id === id
+          ? { ...row, isEditMode: true }
+          : { ...row, isEditMode: false }
+      );
+      setRows(updatedRows);
+      const user = updatedRows.find((row) => row.id === id);
+      handleOpenExperienceDialog(user);
+    }
+  };
+
+  const handleDeleteRow = (id) => {
+    const updatedRows = rows.filter((row) => row.id !== id);
+    setRows(updatedRows);
+  };
+
   const columns = [
     { field: "name", headerName: "Name", width: 180, editable: true },
     {
@@ -136,25 +168,60 @@ export default function CombinedGrid() {
       editable: true,
       align: "left",
       headerAlign: "left",
+      renderCell: (params) =>
+        params.row.isEditMode ? (
+          <TextField
+            value={params.row.age}
+            onChange={(e) => handleCellEdit(e, params.row.id, "age")}
+          />
+        ) : (
+          params.value
+        ),
     },
     {
       field: "experience",
       headerName: "Experience",
       width: 220,
-      editable: true,
-      renderCell: (params) => {
-        return (
-          <Button
-            onClick={() => {
-              handleOpenExperienceDialog(params.row);
-            }}
-          >
+      renderCell: (params) =>
+        params.row.isEditMode ? (
+          <TextField
+            value={params.row.experience}
+            onChange={(e) => handleCellEdit(e, params.row.id, "experience")}
+          />
+        ) : (
+          <Button onClick={() => handleOpenExperienceDialog(params.row)}>
             {params.value || params.row.experience}
           </Button>
+        ),
+    },
+    {
+      field: "actions",
+      headerName: "Actions",
+      width: 120,
+      renderCell: (params) => {
+        return (
+          <div style={{ display: "flex", gap: "20px" }}>
+            <EditIcon
+              onClick={() => handleEditRow(params.row.id)}
+              style={{ cursor: isDialogOpen ? "not-allowed" : "pointer" }} // Disable icon if dialog is open
+            />
+            <DeleteIcon
+              onClick={() => handleDeleteRow(params.row.id)}
+              style={{ cursor: isDialogOpen ? "not-allowed" : "pointer" }} // Disable icon if dialog is open
+            />
+          </div>
         );
       },
     },
   ];
+
+  const handleCellEdit = (e, id, field) => {
+    const value = e.target.value;
+    const updatedRows = rows.map((row) =>
+      row.id === id ? { ...row, [field]: value } : row
+    );
+    setRows(updatedRows);
+  };
 
   return (
     <div style={{ height: 400, width: "100%" }}>
