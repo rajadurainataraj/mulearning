@@ -17,8 +17,6 @@ import {
   TextField,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
-// import EditIcon from '@mui/icons-material/Edit'
-// import DeleteIcon from '@mui/icons-material/Delete'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/DeleteOutlined'
 
@@ -45,7 +43,7 @@ const initialRows = [
     age: 25,
     dateCreated: randomCreatedDate(),
     lastLogin: randomUpdatedDate(),
-    experience: 1,
+    experience: 3, // Assuming initial total experience is 3
     isEditMode: false, // Added flag for edit mode
   },
   {
@@ -57,45 +55,26 @@ const initialRows = [
     experience: 2,
     isEditMode: false, // Added flag for edit mode
   },
-  {
-    id: 3,
-    name: randomTraderName(),
-    age: 19,
-    dateCreated: randomCreatedDate(),
-    lastLogin: randomUpdatedDate(),
-    experience: 3,
-    isEditMode: false, // Added flag for edit mode
-  },
-  {
-    id: 4,
-    name: randomTraderName(),
-    age: 28,
-    dateCreated: randomCreatedDate(),
-    lastLogin: randomUpdatedDate(),
-    experience: 4,
-    isEditMode: false, // Added flag for edit mode
-  },
-  {
-    id: 5,
-    name: randomTraderName(),
-    age: 23,
-    dateCreated: randomCreatedDate(),
-    lastLogin: randomUpdatedDate(),
-    experience: 5,
-    isEditMode: false, // Added flag for edit mode
-  },
+  // Add more initial rows as needed
 ]
 
 export default function CombinedGrid() {
   const mutateRow = useFakeMutation()
-
+  const [datas, setDatas] = React.useState({
+    totalExperience: 3,
+    companies: [
+      { company: 'heal', years: 2, dlt: DeleteIcon },
+      { company: 'yws', years: 1, dlt: DeleteIcon },
+    ],
+  })
   const [snackbar, setSnackbar] = React.useState(null)
   const [openExperienceDialog, setOpenExperienceDialog] = React.useState(false)
   const [selectedUser, setSelectedUser] = React.useState(null)
-  const [newExperience, setNewExperience] = React.useState('')
+  const [newExperience, setNewExperience] = React.useState(null)
   const [rows, setRows] = React.useState(initialRows)
   const [isDialogOpen, setIsDialogOpen] = React.useState(false) // Track dialog open state
   const [getId, setGetId] = React.useState('')
+  const [newCompanies, setNewCompanies] = React.useState([])
 
   const handleCloseSnackbar = () => setSnackbar(null)
   const handleCloseExperienceDialog = () => {
@@ -133,17 +112,20 @@ export default function CombinedGrid() {
   }, [])
 
   const handleUpdateExperience = () => {
-    let totalExperience
-    if (newExperience === '') {
-      totalExperience = selectedUser.experience
-    } else {
-      totalExperience = selectedUser.experience + parseInt(newExperience, 10)
-    }
+    if (newExperience !== null) {
+      // Check if newExperience is not null
+      let totalExperience = 0
+      datas.companies.forEach((company) => {
+        totalExperience += parseInt(company.years, 10)
+      })
 
-    const updatedRows = rows.map((row) =>
-      row.id === selectedUser.id ? { ...row, experience: totalExperience } : row
-    )
-    setRows(updatedRows)
+      const updatedRows = rows.map((row) =>
+        row.id === selectedUser.id
+          ? { ...row, experience: totalExperience }
+          : row
+      )
+      setRows(updatedRows)
+    }
     handleCloseExperienceDialog()
   }
 
@@ -158,7 +140,7 @@ export default function CombinedGrid() {
           : { ...row, isEditMode: false }
       )
       setRows(updatedRows)
-      const user = updatedRows.find((row) => row.id === id)
+      // const user = updatedRows.find((row) => row.id === id)
       // handleOpenExperienceDialog(user);
     }
   }
@@ -167,7 +149,15 @@ export default function CombinedGrid() {
     const updatedRows = rows.filter((row) => row.id !== id)
     setRows(updatedRows)
   }
+  const handleAddCompany = () => {
+    const newCompany = { company: '', years: null, dlt: DeleteIcon }
+    setNewCompanies([...newCompanies, newCompany])
 
+    setDatas((prevDatas) => ({
+      ...prevDatas,
+      companies: [...prevDatas.companies, newCompany],
+    }))
+  }
   const columns = [
     { field: 'name', headerName: 'Name', width: 180, editable: true },
     {
@@ -191,19 +181,28 @@ export default function CombinedGrid() {
       field: 'experience',
       headerName: 'Experience',
       width: 220,
-      renderCell: (params) => (
-        // params.row.isEditMode ? (
-        //   <TextField
-        //     value={params.row.experience}
-        //     onChange={(e) => handleCellEdit(e, params.row.id, 'experience')}
-        //   />
-        // ) : (
-        <Button onClick={() => handleOpenExperienceDialog(params.row)}>
-          {params.value || params.row.experience}
-        </Button>
-      ),
-      // ),
+      renderCell: (params) => {
+        const isNewCompany = newCompanies.some((c) => c === params.row)
+        const experienceValue = parseInt(params.value, 10)
+        const isEditClicked = rows.find(
+          (row) => row.id === params.row.id
+        )?.isEditMode
+
+        return (
+          <Button
+            onClick={() => handleOpenExperienceDialog(params.row)}
+            disabled={!isEditClicked}
+          >
+            {isNewCompany
+              ? ''
+              : isNaN(experienceValue)
+              ? ''
+              : experienceValue || params.row.experience}
+          </Button>
+        )
+      },
     },
+
     {
       field: 'actions',
       headerName: 'Actions',
@@ -231,6 +230,18 @@ export default function CombinedGrid() {
       row.id === id ? { ...row, [field]: value } : row
     )
     setRows(updatedRows)
+  }
+  const handleDeleteCompany = (company) => {
+    const updatedCompanies = datas.companies.filter((c) => c !== company)
+    const totalExperience = updatedCompanies.reduce(
+      (total, c) => total + parseInt(c.years, 10),
+      0
+    )
+    setDatas((prevDatas) => ({
+      ...prevDatas,
+      companies: updatedCompanies,
+      totalExperience,
+    }))
   }
 
   return (
@@ -267,27 +278,66 @@ export default function CombinedGrid() {
               <div style={{ color: 'green' }}>{selectedUser?.name}</div>
             }
           />
-          <TextField
-            style={{ marginTop: '15px' }}
-            type="number"
-            label="Current Experience"
-            value={selectedUser?.experience || ''}
-            onChange={(e) => {
-              setSelectedUser((prevUser) => ({
-                ...prevUser,
-                experience: parseInt(e.target.value, 10) || 0,
-              }))
-            }}
-            fullWidth
-          />
-          <TextField
-            label="New Experience"
-            value={newExperience}
-            type="number"
-            onChange={(e) => setNewExperience(e.target.value)}
-            style={{ margin: '15px 0' }}
-            fullWidth
-          />
+          {datas.companies.map((item) => (
+            <>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: '3px',
+                }}
+              >
+                <TextField
+                  label="Company Name"
+                  value={item.company}
+                  onChange={(e) => {
+                    const updatedCompanies = datas.companies.map((c) =>
+                      c === item ? { ...c, company: e.target.value } : c
+                    )
+                    setDatas((prevDatas) => ({
+                      ...prevDatas,
+                      companies: updatedCompanies,
+                    }))
+                  }}
+                  style={{ margin: '15px 0' }}
+                  fullWidth
+                />
+                <TextField
+                  label="Experience"
+                  value={item.years}
+                  type="number"
+                  onChange={(e) => {
+                    const updatedCompanies = datas.companies.map((c) =>
+                      c === item ? { ...c, years: e.target.value } : c
+                    )
+                    const totalExperience = updatedCompanies.reduce(
+                      (total, company) =>
+                        total + parseInt(company.years || 0, 10),
+                      0
+                    )
+                    setDatas((prevDatas) => ({
+                      ...prevDatas,
+                      companies: updatedCompanies,
+                      totalExperience: totalExperience,
+                    }))
+                  }}
+                  style={{ margin: '15px 0' }}
+                  fullWidth
+                />
+                {item.dlt && (
+                  <Button onClick={() => handleDeleteCompany(item)}>
+                    <DeleteIcon color="red" />
+                  </Button>
+                )}
+                {/* <Button onClick={() => handleDeleteCompany(item.company)}>
+                  <DeleteIcon />
+                </Button> */}
+              </div>
+            </>
+          ))}
+          <Button onClick={() => handleAddCompany()}>Add New Company</Button>
+          <div>Total Experience: {datas.totalExperience}</div>
         </DialogContent>
         <DialogActions>
           <Button

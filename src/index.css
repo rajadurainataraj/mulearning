@@ -1,3 +1,6 @@
 /* button {
   width: 30%;
 } */
+button:disabled {
+  color: black !important;
+}
